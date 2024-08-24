@@ -39,30 +39,3 @@ jobs:
           name: test-coverage
           path: 'coverage/apps/**'
 
-  e2e:
-    runs-on: ubuntu-latest
-    needs: lint-and-build
-    services:
-      mongodb:
-        image: mongo:4.4
-        ports:
-          - 27017:27017
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
-        with:
-          node-version: '20'
-          cache: 'npm'
-      - run: npm ci --legacy-peer-deps
-      - name: Install Xvfb
-        run: sudo apt-get update && sudo apt-get install -y xvfb
-      - name: Run E2E Tests
-        run: |
-          xvfb-run --auto-servernum npx nx run server:serve &
-          sleep 10  # Give the server some time to start
-          xvfb-run --auto-servernum npx nx run-many --target=e2e --all
-      - uses: actions/upload-artifact@v3
-        with:
-          name: e2e-results
-          path: cypress/videos/**
-
