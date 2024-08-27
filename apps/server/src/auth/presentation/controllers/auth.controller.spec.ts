@@ -4,7 +4,8 @@ import { RegisterUseCase } from '../../application/use-cases/register.usecase.se
 import { LoginUseCase } from '../../application/use-cases/login.usecase.service';
 import { LogoutUseCase } from '../../application/use-cases/logout.usecase.service';
 import { RegisterRequestDto, LoginRequestDto } from '../dtos/auth.dto';
-import { ConflictException, UnauthorizedException, HttpStatus } from '@nestjs/common';
+import { AuthResponseDto } from '../dtos/auth.res.dto';
+import { ConflictException, UnauthorizedException } from '@nestjs/common';
 
 describe('AuthController', () => {
   let controller: AuthController;
@@ -43,21 +44,29 @@ describe('AuthController', () => {
     it('should register a new user successfully', async () => {
       const registerDto: RegisterRequestDto = {
         email: 'test@example.com',
+        name: 'Test User',
         password: 'password123',
       };
-      const expectedResult = { token: 'someToken' };
+      const expectedResult: AuthResponseDto = {
+        id: 'someId',
+        email: 'test@example.com',
+        name: 'Test User',
+        createdAt: new Date(),
+        token: { token: 'someToken' },
+      };
 
       mockRegisterUseCase.execute.mockResolvedValue(expectedResult);
 
       const result = await controller.register(registerDto);
 
       expect(result).toEqual(expectedResult);
-      expect(mockRegisterUseCase.execute).toHaveBeenCalledWith(registerDto.email, registerDto.password);
+      expect(mockRegisterUseCase.execute).toHaveBeenCalledWith(registerDto);
     });
 
     it('should throw ConflictException if user already exists', async () => {
       const registerDto: RegisterRequestDto = {
         email: 'existing@example.com',
+        name: 'Existing User',
         password: 'password123',
       };
 
@@ -73,14 +82,20 @@ describe('AuthController', () => {
         email: 'test@example.com',
         password: 'password123',
       };
-      const expectedResult = { token: 'someToken' };
+      const expectedResult: AuthResponseDto = {
+        id: 'someId',
+        email: 'test@example.com',
+        name: 'Test User',
+        createdAt: new Date(),
+        token: { token: 'someToken' },
+      };
 
       mockLoginUseCase.execute.mockResolvedValue(expectedResult);
 
       const result = await controller.login(loginDto);
 
       expect(result).toEqual(expectedResult);
-      expect(mockLoginUseCase.execute).toHaveBeenCalledWith(loginDto.email, loginDto.password);
+      expect(mockLoginUseCase.execute).toHaveBeenCalledWith(loginDto);
     });
 
     it('should throw UnauthorizedException if credentials are invalid', async () => {

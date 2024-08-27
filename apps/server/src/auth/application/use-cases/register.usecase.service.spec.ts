@@ -3,12 +3,16 @@ import { USER_REPOSITORY, PASSWORD_HASHER, TOKEN_SERVICE } from '../../domain/au
 import { ConflictException } from '@nestjs/common';
 import { User } from '../../domain/entities/user.entity';
 import { RegisterUseCase } from './register.usecase.service';
+import { EventEmitter2 } from '@nestjs/event-emitter';
+import { RegisterRequestDto } from '../../presentation/dtos/auth.dto';
+import { AuthResponseDto } from '../../presentation/dtos/auth.res.dto';
 
 describe('RegisterUseCase', () => {
   let useCase: RegisterUseCase;
   let mockUserRepository: jest.Mocked<any>;
   let mockPasswordHasher: jest.Mocked<any>;
   let mockTokenService: jest.Mocked<any>;
+  let mockEventEmitter: jest.Mocked<EventEmitter2>;
 
   beforeEach(async () => {
     mockUserRepository = {
@@ -21,6 +25,9 @@ describe('RegisterUseCase', () => {
     mockTokenService = {
       generate: jest.fn(),
     };
+    mockEventEmitter = {
+      emitAsync: jest.fn(),
+    } as any;
 
     const module: TestingModule = await Test.createTestingModule({
       providers: [
@@ -28,6 +35,7 @@ describe('RegisterUseCase', () => {
         { provide: USER_REPOSITORY, useValue: mockUserRepository },
         { provide: PASSWORD_HASHER, useValue: mockPasswordHasher },
         { provide: TOKEN_SERVICE, useValue: mockTokenService },
+        { provide: EventEmitter2, useValue: mockEventEmitter },
       ],
     }).compile();
 
@@ -39,36 +47,56 @@ describe('RegisterUseCase', () => {
   });
 
   it('should register a new user successfully', async () => {
-    const email = 'test@example.com';
-    const password = 'password123';
+    const registerDto: RegisterRequestDto = {
+      email: 'test@example.com',
+      name: 'Test User',
+      password: 'password123',
+    };
     const hashedPassword = 'hashedPassword123';
     const userId = 'generatedUserId';
     const token = 'generatedToken';
+    const createdAt = new Date();
 
     mockUserRepository.findByEmail.mockResolvedValue(null);
     mockPasswordHasher.hash.mockResolvedValue(hashedPassword);
-    mockUserRepository.create.mockResolvedValue(new User(userId, email, hashedPassword, new Date()));
+    mockUserRepository.create.mockResolvedValue(new User(userId, registerDto.email, registerDto.name, hashedPassword, createdAt));
     mockTokenService.generate.mockReturnValue(token);
 
-    const result = await useCase.execute(email, password);
+    const result = await useCase.execute(registerDto);
 
-    expect(result).toEqual({ token });
-    expect(mockUserRepository.findByEmail).toHaveBeenCalledWith(email);
-    expect(mockPasswordHasher.hash).toHaveBeenCalledWith(password);
-    expect(mockUserRepository.create).toHaveBeenCalledWith(expect.objectContaining({ email, password: hashedPassword }));
+    expect(result).toBeInstanceOf(AuthResponseDto);
+    expect(result).toEqual({
+      id: userId,
+      email: registerDto.email,
+      name: registerDto.name,
+      createdAt: createdAt,
+      token: { token },
+    });
+    expect(mockUserRepository.findByEmail).toHaveBeenCalledWith(registerDto.email);
+    expect(mockPasswordHasher.hash).toHaveBeenCalledWith(registerDto.password);
+    expect(mockUserRepository.create).toHaveBeenCalledWith(expect.objectContaining({
+      email: registerDto.email,
+      name: registerDto.name,
+      password: hashedPassword,
+    }));
     expect(mockTokenService.generate).toHaveBeenCalledWith(expect.any(User));
+    expect(mockEventEmitter.emitAsync).toHaveBeenCalledWith('user.registered', expect.anything());
   });
 
   it('should throw ConflictException if user already exists', async () => {
-    const email = 'existing@example.com';
-    const password = 'password123';
+    const registerDto: RegisterRequestDto = {
+      email: 'existing@example.com',
+      name: 'Existing User',
+      password: 'password123',
+    };
 
-    mockUserRepository.findByEmail.mockResolvedValue(new User('existingId', email, 'hashedPassword', new Date()));
+    mockUserRepository.findByEmail.mockResolvedValue(new User('existingId', registerDto.email, registerDto.name, 'hashedPassword', new Date()));
 
-    await expect(useCase.execute(email, password)).rejects.toThrow(ConflictException);
-    expect(mockUserRepository.findByEmail).toHaveBeenCalledWith(email);
+    await expect(useCase.execute(registerDto)).rejects.toThrow(ConflictException);
+    expect(mockUserRepository.findByEmail).toHaveBeenCalledWith(registerDto.email);
     expect(mockPasswordHasher.hash).not.toHaveBeenCalled();
     expect(mockUserRepository.create).not.toHaveBeenCalled();
     expect(mockTokenService.generate).not.toHaveBeenCalled();
+    expect(mockEventEmitter.emitAsync).not.toHaveBeenCalled();
   });
 });

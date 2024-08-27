@@ -3,6 +3,8 @@ import { IUserRepository } from '../../domain/repositories/user-repository.inter
 import { IPasswordHasher } from '../ports/password-hasher.interface';
 import { ITokenProvider } from '../ports/token-provider.interface';
 import { PASSWORD_HASHER, TOKEN_SERVICE, USER_REPOSITORY } from '../../domain/auth.tokens';
+import { AuthResponseDto } from '../../presentation/dtos/auth.res.dto';
+import { LoginRequestDto } from '../../presentation/dtos/auth.dto';
 
 @Injectable()
 export class LoginUseCase {
@@ -16,16 +18,24 @@ export class LoginUseCase {
   ) {
   }
 
-  async execute(email: string, password: string): Promise<{ token: string } | null> {
-    const user = await this.userRepository.findByEmail(email);
+  async execute(loginRequest:LoginRequestDto): Promise<AuthResponseDto> {
+    const user = await this.userRepository.findByEmail(loginRequest.email);
     if (!user) throw new NotFoundException('User not found');
 
-    const isPasswordValid = await this.passwordHasher.compare(password, user.password);
+    const isPasswordValid = await this.passwordHasher.compare(loginRequest.password, user.password);
     if (!isPasswordValid) throw new UnauthorizedException('Invalid credentials');
 
     await this.userRepository.updateLastLogin(user.id);
     const token = this.tokenService.generate(user);
-    return { token };
+    return new AuthResponseDto(
+      {
+        id: user.id,
+        email: user.email,
+        name:user.name,
+        createdAt: user.createdAt,
+        token: { token: token },
+      }
+    );
   }
 
 }

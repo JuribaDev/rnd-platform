@@ -18,11 +18,12 @@ import {
 import { MongoBlackListedTokenRepository } from './infrastructure/persistence/mongo-blacklisted-token-repository';
 import { LogoutUseCase } from './application/use-cases/logout.usecase.service';
 import * as process from 'node:process';
+import { DatabaseModule } from '../shared/modules/database.module';
 
 @Module({
   imports: [
+    DatabaseModule,
     MongooseModule.forFeature([
-      { name: UserDocument.name, schema: UserSchema },
       { name: BlacklistedTokenDocument.name, schema: BlacklistedTokenSchema },
     ]),
     PassportModule,
@@ -54,5 +55,6 @@ import * as process from 'node:process';
     },
     JwtStrategy,
   ],
+  exports: [USER_REPOSITORY, TOKEN_SERVICE],
 })
 export class AuthModule {}

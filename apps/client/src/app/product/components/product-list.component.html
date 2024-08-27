@@ -1,0 +1,29 @@
+<div class="header">
+  <button mat-button (click)="logout()" class="logout-button">Logout</button>
+  <div class="greeting">Hi 👋</div>
+  <div class="timer">Automated logout after: {{ hours }}:{{ minutes | number: '2.0' }}:{{ seconds | number: '2.0' }}</div>
+</div>
+
+<ng-container *ngIf="productStore.loading() && productStore.page() === 1; else productList">
+  <mat-spinner class="centered"></mat-spinner>
+</ng-container>
+
+<ng-template #productList>
+  <div *ngIf="productStore.products().length; else noProducts">
+    <div *ngFor="let product of productStore.products()" class="product-item">
+      <h3>{{ product.name }}</h3>
+      <p>{{ product.description }}</p>
+      <p>Price: ${{ product.price }}</p>
+      <p>Created: {{ product.createdAt | date }}</p>
+    </div>
+    <mat-paginator
+      [length]="productStore.total()"
+      [pageSize]="productStore.limit()"
+      [pageIndex]="productStore.page() - 1"
+      (page)="onPageChange($event)">
+    </mat-paginator>
+  </div>
+  <ng-template #noProducts>
+    <p>You don't have any products yet.</p>
+  </ng-template>
+</ng-template>

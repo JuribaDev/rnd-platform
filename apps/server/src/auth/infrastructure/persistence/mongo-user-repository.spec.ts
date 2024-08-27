@@ -36,10 +36,11 @@ describe('MongoUserRepository', () => {
   describe('create', () => {
     it('should successfully create a user', async () => {
       const now = new Date();
-      const user = new User('', 'test@example.com', 'hashedPassword', now);
+      const user = new User('', 'test@example.com', 'test user', 'hashedPassword', now);
       const createdUser = {
         _id: 'generatedId',
         email: user.email,
+        name: user.name,
         password: user.password,
         createdAt: now,
         lastLogin: user.lastLogin,
@@ -55,18 +56,20 @@ describe('MongoUserRepository', () => {
       expect(result).toEqual(expect.objectContaining({
         id: 'generatedId',
         email: user.email,
+        name: user.name,
         password: user.password,
         createdAt: now,
       }));
       expect(mockModel.create).toHaveBeenCalledWith(expect.objectContaining({
         email: user.email,
+        name: user.name,
         password: user.password,
         createdAt: now,
       }));
     });
 
     it('should throw an error if user creation fails', async () => {
-      const user = new User('', 'test@example.com', 'hashedPassword', new Date());
+      const user = new User('', 'test@example.com', 'test user','hashedPassword', new Date());
       mockModel.create.mockRejectedValue(new Error('Database error'));
 
       await expect(repository.create(user)).rejects.toThrow('Database error');
@@ -79,6 +82,7 @@ describe('MongoUserRepository', () => {
       const user = {
         _id: 'userId',
         email,
+        name: 'Test User',
         password: 'hashedPassword',
         createdAt: new Date(),
       };

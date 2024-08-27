@@ -13,6 +13,7 @@ import { RegisterUseCase } from '../../application/use-cases/register.usecase.se
 import { LoginUseCase } from '../../application/use-cases/login.usecase.service';
 import { RegisterRequestDto, LoginRequestDto } from '../dtos/auth.dto';
 import { LogoutUseCase } from '../../application/use-cases/logout.usecase.service';
+import { AuthResponseDto } from '../dtos/auth.res.dto';
 
 @Controller('auth')
 export class AuthController {
@@ -24,14 +25,14 @@ export class AuthController {
 
   @Post('register')
   @HttpCode(HttpStatus.CREATED)
-  async register(@Body() registerDto: RegisterRequestDto) {
-    return await this.registerUseCases.execute(registerDto.email, registerDto.password);
+  async register(@Body() registerDto: RegisterRequestDto): Promise<AuthResponseDto> {
+    return await this.registerUseCases.execute(registerDto);
   }
 
   @Post('login')
   @HttpCode(HttpStatus.OK)
-  async login(@Body() loginDto: LoginRequestDto) {
-    return await this.loginUseCases.execute(loginDto.email, loginDto.password);
+  async login(@Body() loginDto: LoginRequestDto): Promise<AuthResponseDto> {
+    return await this.loginUseCases.execute(loginDto);
   }
 
   @UseGuards(AuthGuard('jwt'))
@@ -40,4 +41,5 @@ export class AuthController {
     await this.logoutUseCases.execute(req);
     return { message: 'Logged out successfully' };
   }
+
 }

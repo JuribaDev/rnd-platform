@@ -13,6 +13,7 @@ export class MongoUserRepository implements IUserRepository {
     return new User(
       doc._id.toString(),
       doc.email,
+      doc.name,
       doc.password,
       doc.createdAt,
       doc.lastLogin
@@ -26,6 +27,11 @@ export class MongoUserRepository implements IUserRepository {
 
   async findByEmail(email: string): Promise<User | null> {
     const user = await this.userModel.findOne({ email }).exec();
+    return user ? this.toEntity(user) : null;
+  }
+
+  async findById(id: string): Promise<User | null> {
+    const user = await this.userModel.findById(id).exec();
     return user ? this.toEntity(user) : null;
   }
 
