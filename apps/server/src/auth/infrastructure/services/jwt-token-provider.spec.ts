@@ -30,7 +30,7 @@ describe('JwtTokenProvider', () => {
 
   describe('generate', () => {
     it('should generate a token', () => {
-      const user = new User('123', 'test@example.com', 'password', new Date());
+      const user = new User('123', 'test@example.com','test user', 'password', new Date());
       const token = 'generatedToken';
       jwtService.sign.mockReturnValue(token);
 

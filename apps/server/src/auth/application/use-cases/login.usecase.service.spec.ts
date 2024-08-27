@@ -3,6 +3,8 @@ import { USER_REPOSITORY, PASSWORD_HASHER, TOKEN_SERVICE } from '../../domain/au
 import { NotFoundException, UnauthorizedException } from '@nestjs/common';
 import { User } from '../../domain/entities/user.entity';
 import { LoginUseCase } from './login.usecase.service';
+import { LoginRequestDto } from '../../presentation/dtos/auth.dto';
+import { AuthResponseDto } from '../../presentation/dtos/auth.res.dto';
 
 describe('LoginUseCase', () => {
   let useCase: LoginUseCase;
@@ -39,54 +41,71 @@ describe('LoginUseCase', () => {
   });
 
   it('should login a user successfully', async () => {
-    const email = 'test@example.com';
-    const password = 'password123';
-    const hashedPassword = 'hashedPassword123';
+    const loginRequest: LoginRequestDto = {
+      email: 'test@example.com',
+      password: 'password123',
+    };
     const userId = 'generatedUserId';
+    const name = 'Test User';
+    const hashedPassword = 'hashedPassword123';
+    const createdAt = new Date();
     const token = 'generatedToken';
 
-    const user = new User(userId, email, hashedPassword, new Date());
+    const user = new User(userId, loginRequest.email, name, hashedPassword, createdAt);
 
     mockUserRepository.findByEmail.mockResolvedValue(user);
     mockPasswordHasher.compare.mockResolvedValue(true);
     mockTokenService.generate.mockReturnValue(token);
 
-    const result = await useCase.execute(email, password);
+    const result = await useCase.execute(loginRequest);
 
-    expect(result).toEqual({ token });
-    expect(mockUserRepository.findByEmail).toHaveBeenCalledWith(email);
-    expect(mockPasswordHasher.compare).toHaveBeenCalledWith(password, hashedPassword);
+    expect(result).toBeInstanceOf(AuthResponseDto);
+    expect(result).toEqual({
+      id: userId,
+      email: loginRequest.email,
+      name: name,
+      createdAt: createdAt,
+      token: { token },
+    });
+    expect(mockUserRepository.findByEmail).toHaveBeenCalledWith(loginRequest.email);
+    expect(mockPasswordHasher.compare).toHaveBeenCalledWith(loginRequest.password, hashedPassword);
     expect(mockUserRepository.updateLastLogin).toHaveBeenCalledWith(userId);
     expect(mockTokenService.generate).toHaveBeenCalledWith(user);
   });
 
   it('should throw NotFoundException if user does not exist', async () => {
-    const email = 'nonexistent@example.com';
-    const password = 'password123';
+    const loginRequest: LoginRequestDto = {
+      email: 'nonexistent@example.com',
+      password: 'password123',
+    };
 
     mockUserRepository.findByEmail.mockResolvedValue(null);
 
-    await expect(useCase.execute(email, password)).rejects.toThrow(NotFoundException);
-    expect(mockUserRepository.findByEmail).toHaveBeenCalledWith(email);
+    await expect(useCase.execute(loginRequest)).rejects.toThrow(NotFoundException);
+    expect(mockUserRepository.findByEmail).toHaveBeenCalledWith(loginRequest.email);
     expect(mockPasswordHasher.compare).not.toHaveBeenCalled();
     expect(mockUserRepository.updateLastLogin).not.toHaveBeenCalled();
     expect(mockTokenService.generate).not.toHaveBeenCalled();
   });
 
   it('should throw UnauthorizedException if password is incorrect', async () => {
-    const email = 'test@example.com';
-    const password = 'wrongpassword';
-    const hashedPassword = 'hashedPassword123';
+    const loginRequest: LoginRequestDto = {
+      email: 'test@example.com',
+      password: 'wrongpassword',
+    };
     const userId = 'generatedUserId';
+    const name = 'Test User';
+    const hashedPassword = 'hashedPassword123';
+    const createdAt = new Date();
 
-    const user = new User(userId, email, hashedPassword, new Date());
+    const user = new User(userId, loginRequest.email, name, hashedPassword, createdAt);
 
     mockUserRepository.findByEmail.mockResolvedValue(user);
     mockPasswordHasher.compare.mockResolvedValue(false);
 
-    await expect(useCase.execute(email, password)).rejects.toThrow(UnauthorizedException);
-    expect(mockUserRepository.findByEmail).toHaveBeenCalledWith(email);
-    expect(mockPasswordHasher.compare).toHaveBeenCalledWith(password, hashedPassword);
+    await expect(useCase.execute(loginRequest)).rejects.toThrow(UnauthorizedException);
+    expect(mockUserRepository.findByEmail).toHaveBeenCalledWith(loginRequest.email);
+    expect(mockPasswordHasher.compare).toHaveBeenCalledWith(loginRequest.password, hashedPassword);
     expect(mockUserRepository.updateLastLogin).not.toHaveBeenCalled();
     expect(mockTokenService.generate).not.toHaveBeenCalled();
   });

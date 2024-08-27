@@ -1,0 +1,36 @@
+<div class="container">
+  <div class="login-container">
+    <h2>Register</h2>
+    <form [formGroup]="registerForm" (ngSubmit)="onSubmit()">
+      <div class="form-group">
+        <label for="email">Email</label>
+        <input type="email" id="email" formControlName="email" required>
+        <div *ngIf="registerForm.get('email')?.invalid && registerForm.get('email')?.touched" class="error-message">
+          Please enter a valid email address.
+        </div>
+      </div>
+      <div class="form-group">
+        <label for="name">Name</label>
+        <input type="text" id="name" formControlName="name" required>
+        <div *ngIf="registerForm.get('name')?.invalid && registerForm.get('name')?.touched" class="error-message">
+          Name is required.
+        </div>
+      </div>
+      <div class="form-group">
+        <label for="password">Password</label>
+        <input type="password" id="password" formControlName="password" required>
+        <div *ngIf="registerForm.get('password')?.invalid && registerForm.get('password')?.touched" class="error-message">
+          Password must be at least 8 characters long.
+        </div>
+      </div>
+      <button type="submit" [disabled]="registerForm.invalid">Register</button>
+    </form>
+
+    <!-- Display the error message -->
+    <div *ngIf="authStore.error()" class="error-message">
+      {{ authStore.error() }}
+    </div>
+
+    <p>Already have an account? <a routerLink="/login">Login here</a></p>
+  </div>
+</div>

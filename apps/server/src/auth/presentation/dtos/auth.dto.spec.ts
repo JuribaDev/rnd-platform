@@ -6,6 +6,7 @@ describe('Auth DTOs', () => {
     it('should pass validation with valid data', async () => {
       const dto = new RegisterRequestDto();
       dto.email = 'test@example.com';
+      dto.name = 'Test User';
       dto.password = 'password123';
 
       const errors = await validate(dto);
@@ -26,6 +27,7 @@ describe('Auth DTOs', () => {
     it('should fail validation with short password', async () => {
       const dto = new RegisterRequestDto();
       dto.email = 'test@example.com';
+      dto.name = 'Test User';
       dto.password = 'short';
 
       const errors = await validate(dto);
@@ -38,8 +40,8 @@ describe('Auth DTOs', () => {
       const dto = new RegisterRequestDto();
 
       const errors = await validate(dto);
-      expect(errors.length).toBe(2);
-      expect(errors.map(e => e.property)).toEqual(expect.arrayContaining(['email', 'password']));
+      expect(errors.length).toBe(3);
+      expect(errors.map(e => e.property)).toEqual(expect.arrayContaining(['email', 'name','password']));
     });
   });
 

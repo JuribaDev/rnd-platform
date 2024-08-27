@@ -19,6 +19,8 @@ export class UserDocument extends Document {
 
   @Prop({ required: true })
   password: string;
+  @Prop({ required: true })
+  name: string;
 
   @Prop()
   createdAt: Date;
