@@ -15,15 +15,18 @@ import { EventEmitterModule } from '@nestjs/event-emitter';
     MongooseModule.forRootAsync({
       imports: [ConfigModule],
       useFactory: async (configService: ConfigService) => {
-        const nodeEnv = configService.get<string>('NODE_ENV', 'development');
+        const nodeEnv = configService.get<string>('NODE_ENV', 'local');
         let uri: string;
 
         switch (nodeEnv) {
           case 'production':
             uri = configService.get<string>('PROD_MONGODB_URI')!;
             break;
+            case 'development':
+            uri = configService.get<string>('LOCAL_MONGODB_URI')!;
+            break;
           default:
-            uri = configService.get<string>('DEV_MONGODB_URI')!;
+            uri = configService.get<string>('LOCAL_MONGODB_URI')!;
         }
 
         return { uri };

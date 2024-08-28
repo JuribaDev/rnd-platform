@@ -1,21 +1,44 @@
-# Build stage
-FROM docker.io/node:lts-alpine3.20 AS build
+FROM node:lts-alpine3.20 AS build
 WORKDIR /app
+
+RUN apk add --no-cache python3 make g++
+
 COPY package*.json ./
 RUN npm ci
-COPY . .
-RUN npm run build -- --prod
 
-# Production stage
+COPY . .
+
+RUN npx nx build client --prod
+
+
 FROM nginx:stable-alpine
-COPY --from=build /app/dist/client /usr/share/nginx/html
-COPY nginx.conf /etc/nginx/nginx.conf
-RUN chown -R nginx:nginx /usr/share/nginx/html && chmod -R 755 /usr/share/nginx/html && \
-        chown -R nginx:nginx /var/cache/nginx && \
-        chown -R nginx:nginx /var/log/nginx && \
-        chown -R nginx:nginx /etc/nginx/conf.d
+
+ARG GITHUB_SHA
+ARG BUILD_DATE
+ARG GITHUB_REF_NAME
+
+LABEL org.opencontainers.image.title="R&D Platform Client"
+LABEL org.opencontainers.image.source="https://github.com/JuribaDev/rnd-platform"
+LABEL org.opencontainers.image.revision=${GITHUB_SHA}
+LABEL org.opencontainers.image.created=${BUILD_DATE}
+LABEL org.opencontainers.image.version=${GITHUB_REF_NAME}
+LABEL maintainer="Juriba Saleh juribaSaleh@gmail.com"
+
+COPY --from=build /app/dist/apps/client/browser /usr/share/nginx/html
+
+COPY apps/client/nginx.conf /etc/nginx/nginx.conf
+
+RUN chown -R nginx:nginx /usr/share/nginx/html && \
+    chmod -R 755 /usr/share/nginx/html && \
+    chown -R nginx:nginx /var/cache/nginx && \
+    chown -R nginx:nginx /var/log/nginx && \
+    chown -R nginx:nginx /etc/nginx/conf.d
+
 RUN touch /var/run/nginx.pid && \
-        chown -R nginx:nginx /var/run/nginx.pid
+    chown -R nginx:nginx /var/run/nginx.pid
+
 USER nginx
+
 EXPOSE 80
+
 CMD ["nginx", "-g", "daemon off;"]
