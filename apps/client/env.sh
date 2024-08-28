@@ -1,8 +1,25 @@
 #!/bin/sh
 
-# Recreate config file
-envsubst < /usr/share/nginx/html/main*.js > /usr/share/nginx/html/main-replaced.js
-mv /usr/share/nginx/html/main-replaced.js /usr/share/nginx/html/main*.js
+set -e
 
-# Replace API_URL in the main.js file
-sed -i 's|apiUrl:[^,]*|apiUrl:"'"${API_URL}"'"|g' /usr/share/nginx/html/main*.js
+log() {
+  echo "[INFO] $1"
+}
+
+if [ -z "$API_URL" ]; then
+  echo "[ERROR] API_URL environment variable is not set."
+  exit 1
+fi
+
+log "Replacing API_URL in main JavaScript files"
+
+find /usr/share/nginx/html/ -name 'main*.js' -exec sed -i 's|apiUrl:[^,]*|apiUrl:"'"${API_URL}"'"|g' {} +
+
+log "API_URL successfully replaced in JavaScript files"
+
+log "Verifying changes in JavaScript files"
+for file in /usr/share/nginx/html/main*.js; do
+  head -n 5 "$file"
+done
+
+log "Script completed successfully"
