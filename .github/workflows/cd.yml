@@ -65,15 +65,13 @@ jobs:
       - name: Install kubectl
         run: gcloud components install kubectl
 
-      - name: Create Namespace if Not Exists
-        run: |
-          kubectl get namespace ${{ secrets.ENVIRONMENT_NAMESPACE }} || kubectl create namespace ${{ env.ENVIRONMENT_NAMESPACE }}
-
-
       - name: Deploy to GKE
         run: |
           gcloud container clusters get-credentials ${{ secrets.GKE_CLUSTER }} --zone ${LOCATION} --project ${{ secrets.GCP_PROJECT_ID }}
 
+          # Create Namespace if Not Exists
+          kubectl get namespace ${{ secrets.ENVIRONMENT_NAMESPACE }} || kubectl create namespace ${{ env.ENVIRONMENT_NAMESPACE }}
+          
           # Update Kubernetes manifests with secrets and environment variables
           sed -i 's|ENVIRONMENT_NAMESPACE|'${{ secrets.ENVIRONMENT_NAMESPACE }}'|g' k8s/*.yaml
           sed -i 's|MONGODB_URI_SECRET|'${{ secrets.MONGODB_URI_SECRET }}'|g' k8s/*.yaml
