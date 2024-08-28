@@ -9,13 +9,14 @@ on:
 jobs:
   build-and-push:
     runs-on: ubuntu-latest
-    
+
     permissions:
       contents: 'read'
       id-token: 'write'
 
     env:
       LOCATION: me-central1
+
 
     steps:
       - name: Checkout code
@@ -60,3 +61,101 @@ jobs:
             .
           docker push ${LOCATION}-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/${{ secrets.REPO_NAME }}/server:${{ github.sha }}
           docker push ${LOCATION}-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/${{ secrets.REPO_NAME }}/server:${{ github.ref_name }}
+
+      - name: Install kubectl
+        run: gcloud components install kubectl
+
+      - name: Create Namespace if Not Exists
+        run: |
+          kubectl get namespace ${{ secrets.ENVIRONMENT_NAMESPACE }} || kubectl create namespace ${{ env.ENVIRONMENT_NAMESPACE }}
+
+
+      - name: Deploy to GKE
+        run: |
+          gcloud container clusters get-credentials ${{ secrets.GKE_CLUSTER }} --zone ${LOCATION} --project ${{ secrets.GCP_PROJECT_ID }}
+
+          # Update Kubernetes manifests with secrets and environment variables
+          sed -i 's|ENVIRONMENT_NAMESPACE|'${{ secrets.ENVIRONMENT_NAMESPACE }}'|g' k8s/*.yaml
+          sed -i 's|MONGODB_URI_SECRET|'${{ secrets.MONGODB_URI_SECRET }}'|g' k8s/*.yaml
+          sed -i 's|JWT_KEY_SECRET|'${{ secrets.JWT_KEY_SECRET }}'|g' k8s/*.yaml
+          sed -i 's|JWT_EXPIRATION|'${{ secrets.JWT_EXPIRATION }}'|g' k8s/*.yaml
+          sed -i 's|LOCATION|'${LOCATION}'|g' k8s/*.yaml
+          sed -i 's|PROJECT_ID|'${{ secrets.GCP_PROJECT_ID }}'|g' k8s/*.yaml
+          sed -i 's|REPO_NAME|'${{ secrets.REPO_NAME }}'|g' k8s/*.yaml
+          sed -i 's|TAG|'${{ github.sha }}'|g' k8s/*.yaml
+          sed -i 's|STATIC_IP_PLACEHOLDER|'${{ secrets.STATIC_IP }}'|g' k8s/*.yaml
+
+          # Apply Kubernetes manifests
+          kubectl apply -f k8s/
+
+      - name: Setup TLS and Wait for Deployments
+        run: |
+          # Install cert-manager if not already installed
+          if ! kubectl get namespace cert-manager &> /dev/null; then
+            kubectl apply -f https://github.com/cert-manager/cert-manager/releases/download/v1.12.0/cert-manager.yaml
+            echo "Waiting for cert-manager to be ready..."
+            kubectl wait --for=condition=ready pod -l app.kubernetes.io/instance=cert-manager -n cert-manager --timeout=300s
+          else
+            echo "cert-manager is already installed."
+          fi
+
+          # Create ClusterIssuer if it doesn't exist
+          if ! kubectl get clusterissuer letsencrypt-prod &> /dev/null; then
+            cat <<EOF | kubectl apply -f -
+            apiVersion: cert-manager.io/v1
+            kind: ClusterIssuer
+            metadata:
+              name: letsencrypt-prod
+            spec:
+              acme:
+                server: https://acme-v02.api.letsencrypt.org/directory
+                email: ${{ secrets.LETSENCRYPT_EMAIL }}
+                privateKeySecretRef:
+                  name: letsencrypt-prod
+                solvers:
+                - http01:
+                    ingress:
+                      class: nginx
+            EOF
+            echo "ClusterIssuer created."
+          else
+            echo "ClusterIssuer already exists."
+          fi
+
+          # Wait for deployments to be ready
+          echo "Waiting for server deployment to be ready..."
+          kubectl rollout status deployment/server-deployment --timeout=300s
+
+          echo "Waiting for client deployment to be ready..."
+          kubectl rollout status deployment/client-deployment --timeout=300s
+
+      - name: Wait for TLS Certificate
+        run: |
+          echo "Waiting for TLS certificate to be issued..."
+          max_attempts=20
+          attempt=0
+          while [ $attempt -lt $max_attempts ]; do
+            status=$(kubectl get certificate rnd-platform-tls -o jsonpath="{.status.conditions[?(@.type=='Ready')].status}" 2>/dev/null)
+            if [ "$status" = "True" ]; then
+              echo "TLS certificate issued successfully!"
+              break
+            elif [ "$status" = "False" ]; then
+              reason=$(kubectl get certificate rnd-platform-tls -o jsonpath="{.status.conditions[?(@.type=='Ready')].reason}")
+              echo "Certificate is not ready. Reason: $reason"
+            else
+              echo "Certificate status unknown. It may still be processing."
+            fi
+
+            attempt=$((attempt+1))
+            if [ $attempt -eq $max_attempts ]; then
+              echo "Maximum attempts reached. Certificate may not be ready."
+              exit 1
+            fi
+
+            echo "Waiting before next check..."
+            sleep 30
+          done
+
+      - name: Output Access URL
+        run: |
+          echo "Application is accessible at https://${{ secrets.STATIC_IP }}"
