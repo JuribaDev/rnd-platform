@@ -77,7 +77,7 @@ jobs:
           echo "Namespace already exists."
           fi          
           
-          Set correct permissions on manifests
+          # Set correct permissions on manifests
           chmod -R u+w k8s/
           
           # Update Kubernetes manifests with secrets and environment variables
