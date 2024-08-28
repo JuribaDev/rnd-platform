@@ -19,8 +19,6 @@ export class ProductController {
     @Query('limit') limit = 10
   ): Promise<PaginatedProductResponseDto> {
     const result = await this.getUserProductsUseCase.execute(req, page, limit);
-    await new Promise(resolve => setTimeout(resolve, 3000)); // 2-second delay
-
     return new PaginatedProductResponseDto(result);
   }
 

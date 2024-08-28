@@ -32,7 +32,7 @@ export class RegisterUseCase {
 
     const newUser = new User(
       '',
-      registerDto.email,
+      registerDto.email.trim().toLowerCase(),
       registerDto.name,
       hashedPassword,
       new Date(),

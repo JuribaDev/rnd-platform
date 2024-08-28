@@ -22,7 +22,7 @@ async function bootstrap() {
   const globalPrefix = 'api/v1';
   app.setGlobalPrefix(globalPrefix);
   app.enableCors({
-    origin: ['http://localhost:4200'],
+    origin: ['http://localhost'],
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
     credentials: true,
   });
