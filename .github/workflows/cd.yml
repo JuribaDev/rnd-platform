@@ -1,0 +1,90 @@
+name: Build and Deploy Docker Images
+
+on:
+  push:
+    branches:
+      - main
+      - dev
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    permissions:
+      contents: 'read'
+      id-token: 'write'
+
+    env:
+      LOCATION: me-central1
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Set up NX Cache
+        uses: nrwl/nx-set-shas@v3
+
+      - name: Authenticate to Google Cloud
+        uses: google-github-actions/auth@v2
+        with:
+          workload_identity_provider: ${{ secrets.WORKLOAD_IDENTITY_PROVIDER }}
+          service_account: ${{ secrets.GCP_SERVICE_ACCOUNT_EMAIL }}
+
+      - name: Set up Google Cloud SDK
+        uses: google-github-actions/setup-gcloud@v2
+        with:
+          project_id: ${{ secrets.GCP_PROJECT_ID }}
+
+      - name: Configure Docker to use gcloud as a credential helper
+        run: |
+          gcloud auth configure-docker
+
+      - name: Determine Affected Projects
+        id: affected
+        run: |
+          npx nx show projects --affected --base=main > affected_apps.txt
+          cat affected_apps.txt
+          if grep -q "client" affected_apps.txt; then
+            echo "client" >> $GITHUB_ENV
+          fi
+          if grep -q "server" affected_apps.txt; then
+            echo "server" >> $GITHUB_ENV
+          fi
+
+      - name: Configure Docker for Artifact Registry
+        run: gcloud auth configure-docker ${LOCATION}-docker.pkg.dev
+
+      - name: Build and push Docker image for client
+        if: contains(env.client, 'client')
+        run: |
+          docker build \
+            --build-arg BUILD_DATE=$(date -u +'%Y-%m-%dT%H:%M:%SZ') \
+            --build-arg GITHUB_SHA=${{ github.sha }} \
+            --build-arg GITHUB_REF_NAME=${{ github.ref_name }} \
+            -f apps/client/Dockerfile \
+            -t ${LOCATION}-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/${{ secrets.REPO_NAME }}/client:${{ github.sha }} \
+            -t ${LOCATION}-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/${{ secrets.REPO_NAME }}/client:${{ github.ref_name }} \
+            .
+          docker push ${LOCATION}-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/${{ secrets.REPO_NAME }}/client:${{ github.sha }}
+
+      - name: Build and push Docker image for server
+        if: contains(env.server, 'server')
+        run: |
+          docker build \
+            --build-arg BUILD_DATE=$(date -u +'%Y-%m-%dT%H:%M:%SZ') \
+            --build-arg GITHUB_SHA=${{ github.sha }} \
+            --build-arg GITHUB_REF_NAME=${{ github.ref_name }} \
+            -f apps/server/Dockerfile \
+            -t ${LOCATION}-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/${{ secrets.REPO_NAME }}/server:${{ github.sha }} \
+            -t ${LOCATION}-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/${{ secrets.REPO_NAME }}/server:${{ github.ref_name }} \
+            .
+          docker push ${LOCATION}-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/${{ secrets.REPO_NAME }}/server:${{ github.sha }}
