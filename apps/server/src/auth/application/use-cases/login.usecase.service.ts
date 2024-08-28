@@ -19,7 +19,7 @@ export class LoginUseCase {
   }
 
   async execute(loginRequest:LoginRequestDto): Promise<AuthResponseDto> {
-    const user = await this.userRepository.findByEmail(loginRequest.email);
+    const user = await this.userRepository.findByEmail(loginRequest.email.trim().toLowerCase());
     if (!user) throw new NotFoundException('User not found');
 
     const isPasswordValid = await this.passwordHasher.compare(loginRequest.password, user.password);

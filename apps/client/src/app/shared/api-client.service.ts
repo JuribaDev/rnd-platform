@@ -3,13 +3,14 @@ import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { TokenService } from './token.service';
 import { LoginRequestDto, RegisterRequestDto, AuthResponseDto } from '../auth/dto/auth.dto';
-import { PaginatedProductResponseDto, ProductDto } from '../product/dto/product.dto';
+import { PaginatedProductResponseDto } from '../product/dto/product.dto';
+import { environment } from '../../environments/environment';
 
 @Injectable({
   providedIn: 'root'
 })
 export class ApiClientService {
-  private baseUrl = 'http://localhost:3000/api/v1';
+  private baseUrl = environment.apiUrl;
 
   constructor(private http: HttpClient, private tokenService: TokenService) {}
 
