@@ -27,11 +27,6 @@ jobs:
           node-version: '20'
           cache: 'npm'
 
-      - name: Install dependencies
-        run: npm install
-
-      - name: Set up NX Cache
-        uses: nrwl/nx-set-shas@v3
 
       - name: Authenticate to Google Cloud
         uses: google-github-actions/auth@v2
