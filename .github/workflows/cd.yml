@@ -70,7 +70,12 @@ jobs:
           gcloud container clusters get-credentials ${{ secrets.GKE_CLUSTER }} --zone ${LOCATION} --project ${{ secrets.GCP_PROJECT_ID }}
 
           # Create Namespace if Not Exists
-          kubectl get namespace ${{ secrets.ENVIRONMENT_NAMESPACE }} || kubectl create namespace ${{ env.ENVIRONMENT_NAMESPACE }}
+          if ! kubectl get namespace ${{ secrets.ENVIRONMENT_NAMESPACE }} &> /dev/null; then
+          echo "Namespace does not exist. Creating it."
+          kubectl create namespace ${{ secrets.ENVIRONMENT_NAMESPACE }}
+          else
+          echo "Namespace already exists."
+          fi          
           
           # Update Kubernetes manifests with secrets and environment variables
           sed -i 's|ENVIRONMENT_NAMESPACE|'${{ secrets.ENVIRONMENT_NAMESPACE }}'|g' k8s/*.yaml
