@@ -77,6 +77,9 @@ jobs:
           echo "Namespace already exists."
           fi          
           
+          Set correct permissions on manifests
+          chmod -R u+w k8s/
+          
           # Update Kubernetes manifests with secrets and environment variables
           sed -i 's|ENVIRONMENT_NAMESPACE|'${{ secrets.ENVIRONMENT_NAMESPACE }}'|g' k8s/*.yaml
           sed -i 's|MONGODB_URI_SECRET|'${{ secrets.MONGODB_URI_SECRET }}'|g' k8s/*.yaml
