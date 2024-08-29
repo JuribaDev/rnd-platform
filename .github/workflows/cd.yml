@@ -75,16 +75,16 @@ jobs:
           kubectl create namespace ${{ secrets.ENVIRONMENT_NAMESPACE }}
           else
           echo "Namespace already exists."
-          fi          
-          
+          fi
+
           # Set correct permissions on manifests
           sudo chmod 777 k8s/manifests.yaml
-          
+
           # Update Kubernetes manifests with secrets and environment variables
           sed -i 's|ENVIRONMENT_NAMESPACE|'${{ secrets.ENVIRONMENT_NAMESPACE }}'|g' k8s/manifests.yaml
           sed -i 's|MONGODB_URI_SECRET|'${{ secrets.MONGODB_URI_SECRET }}'|g' k8s/manifests.yaml
           sed -i 's|JWT_KEY_SECRET|'${{ secrets.JWT_KEY_SECRET }}'|g' k8s/manifests.yaml
-          sed -i 's|JWT_EXPIRATION|'${{ secrets.JWT_EXPIRATION }}'|g' k8s/manifests.yaml
+          sed -i 's|JWT_EXPIRATION_KEY_SECRET|'${{ secrets.JWT_EXPIRATION }}'|g' k8s/manifests.yaml
           sed -i 's|LOCATION|'${LOCATION}'|g' k8s/manifests.yaml
           sed -i 's|PROJECT_ID|'${{ secrets.GCP_PROJECT_ID }}'|g' k8s/manifests.yaml
           sed -i 's|REPO_NAME|'${{ secrets.REPO_NAME }}'|g' k8s/manifests.yaml
