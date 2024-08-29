@@ -121,7 +121,7 @@ jobs:
                 - http01:
                     ingress:
                       class: nginx
-            EOF
+EOF
             echo "ClusterIssuer created."
           else
             echo "ClusterIssuer already exists."
