@@ -107,21 +107,22 @@ jobs:
           # Create ClusterIssuer if it doesn't exist
           if ! kubectl get clusterissuer letsencrypt-prod &> /dev/null; then
             cat <<EOF | kubectl apply -f -
-            apiVersion: cert-manager.io/v1
-            kind: ClusterIssuer
-            metadata:
-              name: letsencrypt-prod
-            spec:
-              acme:
-                server: https://acme-v02.api.letsencrypt.org/directory
-                email: ${{ secrets.LETSENCRYPT_EMAIL }}
-                privateKeySecretRef:
-                  name: letsencrypt-prod
-                solvers:
-                - http01:
-                    ingress:
-                      class: nginx
+apiVersion: cert-manager.io/v1
+kind: ClusterIssuer
+metadata:
+  name: letsencrypt-prod
+spec:
+  acme:
+    server: https://acme-v02.api.letsencrypt.org/directory
+    email: ${{ secrets.LETSENCRYPT_EMAIL }}
+    privateKeySecretRef:
+      name: letsencrypt-prod
+    solvers:
+    - http01:
+        ingress:
+          class: nginx
 EOF
+
             echo "ClusterIssuer created."
           else
             echo "ClusterIssuer already exists."
