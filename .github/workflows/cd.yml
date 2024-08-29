@@ -106,19 +106,6 @@ jobs:
 
           # Create ClusterIssuer if it doesn't exist
           if ! kubectl get clusterissuer letsencrypt-prod &> /dev/null; then
-            - name: Setup TLS and Wait for Deployments
-        run: |
-          # Install cert-manager if not already installed
-          if ! kubectl get namespace cert-manager &> /dev/null; then
-            kubectl apply -f https://github.com/cert-manager/cert-manager/releases/download/v1.12.0/cert-manager.yaml
-            echo "Waiting for cert-manager to be ready..."
-            kubectl wait --for=condition=ready pod -l app.kubernetes.io/instance=cert-manager -n cert-manager --timeout=300s
-          else
-            echo "cert-manager is already installed."
-          fi
-
-          # Create ClusterIssuer if it doesn't exist
-          if ! kubectl get clusterissuer letsencrypt-prod &> /dev/null; then
             cat<<EOF | kubectl apply -f -
             apiVersion: cert-manager.io/v1
             kind: ClusterIssuer
@@ -136,18 +123,6 @@ jobs:
                       class: nginx
             EOF
             
-            echo "ClusterIssuer created."
-          else
-            echo "ClusterIssuer already exists."
-          fi
-
-          # Wait for deployments to be ready
-          echo "Waiting for server deployment to be ready..."
-          kubectl rollout status deployment/server-deployment --timeout=300s
-
-          echo "Waiting for client deployment to be ready..."
-          kubectl rollout status deployment/client-deployment --timeout=300s
-
             echo "ClusterIssuer created."
           else
             echo "ClusterIssuer already exists."
