@@ -78,7 +78,7 @@ jobs:
           fi          
           
           # Set correct permissions on manifests
-          chmod u+w k8s/manifests.yaml
+          sudo chmod 777 k8s/manifests.yaml
           
           # Update Kubernetes manifests with secrets and environment variables
           sed -i 's|ENVIRONMENT_NAMESPACE|'${{ secrets.ENVIRONMENT_NAMESPACE }}'|g' k8s/manifests.yaml
