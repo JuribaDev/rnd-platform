@@ -81,17 +81,17 @@ jobs:
           sudo chmod 777 k8s/manifests.yaml
 
           # Update Kubernetes manifests with secrets and environment variables
-          sed -i 's|ENVIRONMENT_NAMESPACE|'${{ secrets.ENVIRONMENT_NAMESPACE }}'|g' k8s/manifests.yaml
-          sed -i 's|MONGODB_URI_SECRET|'${{ secrets.MONGODB_URI_SECRET }}'|g' k8s/manifests.yaml
-          sed -i 's|JWT_KEY_SECRET|'${{ secrets.JWT_KEY_SECRET }}'|g' k8s/manifests.yaml
-          sed -i 's|LOCATION|'${{env.LOCATION}}'|g' k8s/manifests.yaml
-          sed -i 's|PROJECT_ID|'${{ secrets.GCP_PROJECT_ID }}'|g' k8s/manifests.yaml
-          sed -i 's|REPO_NAME|'${{ secrets.REPO_NAME }}'|g' k8s/manifests.yaml
-          sed -i 's|TAG|'${{ github.sha }}'|g' k8s/manifests.yaml
-          sed -i 's|STATIC_IP_PLACEHOLDER|'${{ secrets.STATIC_IP }}'|g' k8s/manifests.yaml
+          sed -i "s|ENVIRONMENT_NAMESPACE|${{ secrets.ENVIRONMENT_NAMESPACE }}|g" k8s/manifests.yaml
+          sed -i "s|MONGODB_URI_SECRET|${{ secrets.MONGODB_URI_SECRET }}|g" k8s/manifests.yaml
+          sed -i "s|JWT_KEY_SECRET|${{ secrets.JWT_KEY_SECRET }}|g" k8s/manifests.yaml
+          sed -i "s|LOCATION|${{env.LOCATION}}|g" k8s/manifests.yaml
+          sed -i "s|PROJECT_ID|${{ secrets.GCP_PROJECT_ID }}|g" k8s/manifests.yaml
+          sed -i "s|REPO_NAME|${{ secrets.REPO_NAME }}|g" k8s/manifests.yaml
+          sed -i "s|TAG|${{ github.sha }}|g" k8s/manifests.yaml
+          sed -i "s|STATIC_IP_NAME_PLACEHOLDER|${{ secrets.STATIC_IP_NAME_PLACEHOLDER }}|g" k8s/manifests.yaml
 
           # Apply Kubernetes manifests
-          kubectl apply -f k8s/
+          kubectl apply -f k8s/manifests.yaml
 
       - name: Setup TLS and Wait for Deployments
         run: |
@@ -163,4 +163,4 @@ jobs:
 
       - name: Output Access URL
         run: |
-          echo "Application is accessible at https://${{ secrets.STATIC_IP }}"
+          echo "Application is accessible at https://rndplatform.juriba.info"
