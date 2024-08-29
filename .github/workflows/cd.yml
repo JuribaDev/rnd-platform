@@ -34,7 +34,7 @@ jobs:
 
       - name: Configure Docker for Artifact Registry
         run: |
-          gcloud auth configure-docker ${LOCATION}-docker.pkg.dev
+          gcloud auth configure-docker ${{env.LOCATION}}-docker.pkg.dev
 
       - name: Build and push Docker image for client
         run: |
@@ -43,11 +43,11 @@ jobs:
             --build-arg GITHUB_SHA=${{ github.sha }} \
             --build-arg GITHUB_REF_NAME=${{ github.ref_name }} \
             -f apps/client/Dockerfile \
-            -t ${LOCATION}-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/${{ secrets.REPO_NAME }}/client:${{ github.sha }} \
-            -t ${LOCATION}-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/${{ secrets.REPO_NAME }}/client:${{ github.ref_name }} \
+            -t ${{env.LOCATION}}-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/${{ secrets.REPO_NAME }}/client:${{ github.sha }} \
+            -t ${{env.LOCATION}}-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/${{ secrets.REPO_NAME }}/client:${{ github.ref_name }} \
             .
-          docker push ${LOCATION}-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/${{ secrets.REPO_NAME }}/client:${{ github.sha }}
-          docker push ${LOCATION}-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/${{ secrets.REPO_NAME }}/client:${{ github.ref_name }}
+          docker push ${{env.LOCATION}}-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/${{ secrets.REPO_NAME }}/client:${{ github.sha }}
+          docker push ${{env.LOCATION}}-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/${{ secrets.REPO_NAME }}/client:${{ github.ref_name }}
 
       - name: Build and push Docker image for server
         run: |
@@ -56,18 +56,18 @@ jobs:
             --build-arg GITHUB_SHA=${{ github.sha }} \
             --build-arg GITHUB_REF_NAME=${{ github.ref_name }} \
             -f apps/server/Dockerfile \
-            -t ${LOCATION}-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/${{ secrets.REPO_NAME }}/server:${{ github.sha }} \
-            -t ${LOCATION}-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/${{ secrets.REPO_NAME }}/server:${{ github.ref_name }} \
+            -t ${{env.LOCATION}}-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/${{ secrets.REPO_NAME }}/server:${{ github.sha }} \
+            -t ${{env.LOCATION}}-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/${{ secrets.REPO_NAME }}/server:${{ github.ref_name }} \
             .
-          docker push ${LOCATION}-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/${{ secrets.REPO_NAME }}/server:${{ github.sha }}
-          docker push ${LOCATION}-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/${{ secrets.REPO_NAME }}/server:${{ github.ref_name }}
+          docker push ${{env.LOCATION}}-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/${{ secrets.REPO_NAME }}/server:${{ github.sha }}
+          docker push ${{env.LOCATION}}-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/${{ secrets.REPO_NAME }}/server:${{ github.ref_name }}
 
       - name: Install kubectl
         run: gcloud components install kubectl
 
       - name: Deploy to GKE
         run: |
-          gcloud container clusters get-credentials ${{ secrets.GKE_CLUSTER }} --zone ${LOCATION} --project ${{ secrets.GCP_PROJECT_ID }}
+          gcloud container clusters get-credentials ${{ secrets.GKE_CLUSTER }} --zone ${{env.LOCATION}} --project ${{ secrets.GCP_PROJECT_ID }}
 
           # Create Namespace if Not Exists
           if ! kubectl get namespace ${{ secrets.ENVIRONMENT_NAMESPACE }} &> /dev/null; then
@@ -84,8 +84,7 @@ jobs:
           sed -i 's|ENVIRONMENT_NAMESPACE|'${{ secrets.ENVIRONMENT_NAMESPACE }}'|g' k8s/manifests.yaml
           sed -i 's|MONGODB_URI_SECRET|'${{ secrets.MONGODB_URI_SECRET }}'|g' k8s/manifests.yaml
           sed -i 's|JWT_KEY_SECRET|'${{ secrets.JWT_KEY_SECRET }}'|g' k8s/manifests.yaml
-          sed -i 's|JWT_EXPIRATION_KEY_SECRET|'${{ secrets.JWT_EXPIRATION }}'|g' k8s/manifests.yaml
-          sed -i 's|LOCATION|'${LOCATION}'|g' k8s/manifests.yaml
+          sed -i 's|LOCATION|'${{env.LOCATION}}'|g' k8s/manifests.yaml
           sed -i 's|PROJECT_ID|'${{ secrets.GCP_PROJECT_ID }}'|g' k8s/manifests.yaml
           sed -i 's|REPO_NAME|'${{ secrets.REPO_NAME }}'|g' k8s/manifests.yaml
           sed -i 's|TAG|'${{ github.sha }}'|g' k8s/manifests.yaml

@@ -23,18 +23,14 @@ spec:
               valueFrom:
                 secretKeyRef:
                   name: app-secrets
-                  key: MONGODB_URI_KEY
+                  key: MongodbURIKey
             - name: JWT_SECRET
               valueFrom:
                 secretKeyRef:
                   name: app-secrets
-                  key: JWT_KEY
-
+                  key: JwtKey
             - name: JWT_EXPIRATION
-              valueFrom:
-                secretKeyRef:
-                  name: app-secrets
-                  key: JWT_EXPIRATION_KEY
+              value: "8h"
 
 ---
 apiVersion: v1
@@ -117,6 +113,5 @@ metadata:
   name: app-secrets
 type: Opaque
 stringData:
-  MONGODB_URI_KEY: "MONGODB_URI_SECRET"
-  JWT_KEY: "JWT_KEY_SECRET"
-  JWT_EXPIRATION_KEY: "JWT_EXPIRATION_KEY_SECRET"
+  MongodbURIKey: "MONGODB_URI_SECRET"
+  JwtKey: "JWT_KEY_SECRET"
