@@ -62,13 +62,10 @@ jobs:
           docker push ${{env.LOCATION}}-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/${{ secrets.REPO_NAME }}/server:${{ github.sha }}
           docker push ${{env.LOCATION}}-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/${{ secrets.REPO_NAME }}/server:${{ github.ref_name }}
 
-      - name: Install kubectl
-        run: gcloud components install kubectl
-
       # Deploy server to Cloud Run with environment variables
       - name: Deploy Server to Cloud Run
         id: deploy-server
-        uses: google-github-actions/deploy-cloudrun@v0
+        uses: google-github-actions/deploy-cloudrun@v2
         with:
           service: ${{ secrets.SERVER_SERVICE }}
           region: ${{env.LOCATION}}
@@ -81,7 +78,7 @@ jobs:
       # Deploy client to Cloud Run with the server's URL as an environment variable
       - name: Deploy Client to Cloud Run
         id: deploy-client
-        uses: google-github-actions/deploy-cloudrun@v0
+        uses: google-github-actions/deploy-cloudrun@v2
         with:
           service: ${{ secrets.CLIENT_SERVICE }}
           region: ${{env.LOCATION}}
