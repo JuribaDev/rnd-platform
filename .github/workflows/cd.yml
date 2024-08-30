@@ -97,13 +97,6 @@ jobs:
             --max-instances 3
             --min-instances 1
             --concurrency 100
-            --allow-unauthenticated
-
+            --ingress internal
           timeout: 600s
-           
-      # If required, use the Cloud Run URL outputs in later steps
-      - name: Show Client URL
-        run: echo ${{ steps.deploy-client.outputs.url }}
 
-      - name: Show Server URL
-        run: echo ${{ steps.deploy-server.outputs.url }}

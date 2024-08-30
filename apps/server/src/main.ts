@@ -21,7 +21,11 @@ async function bootstrap() {
   }));
   const globalPrefix = 'api/v1';
   app.setGlobalPrefix(globalPrefix);
-  app.enableCors();
+  app.enableCors({
+    origin: ['https://34.1.32.26', 'https://rndplatform.juriba.info'],
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
+    credentials: true,
+  });
 
   const port = process.env.PORT || 3000;
   await app.listen(port);
