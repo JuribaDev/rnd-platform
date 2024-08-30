@@ -69,8 +69,16 @@ jobs:
           image: ${{env.LOCATION}}-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/${{ secrets.REPO_NAME }}/server:${{ github.sha }}-${{ github.ref_name }}
           env_vars: |
             JWT_SECRET=${{ secrets.JWT_KEY_SECRET }}
-            MONGODB_URI=${{ secrets.MONGODB_URI_SECRET }}
+            PROD_MONGODB_URI=${{ secrets.MONGODB_URI_SECRET }}
             TOKEN_EXPIRATION=${{ secrets.JWT_EXPIRATION }}
+          flags: |
+            --port 3000
+            --memory 512Mi
+            --cpu 1
+            --max-instances 3
+            --min-instances 1
+            --concurrency 80
+            --ingress internal
           timeout: 600s
 
       - name: Deploy Client to Cloud Run
@@ -81,7 +89,14 @@ jobs:
           region: ${{env.LOCATION}}
           image: ${{env.LOCATION}}-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/${{ secrets.REPO_NAME }}/client:${{ github.sha }}-${{ github.ref_name }}
           env_vars: |
-            SERVER_URL=${{ steps.deploy-server.outputs.url }}
+            API_URL=${{ steps.deploy-server.outputs.url }}
+          flags: |
+            --port 80
+            --memory 256Mi
+            --cpu 1
+            --max-instances 3
+            --min-instances 1
+            --concurrency 100
           timeout: 600s
            
       # If required, use the Cloud Run URL outputs in later steps
