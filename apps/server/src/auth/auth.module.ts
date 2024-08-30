@@ -10,7 +10,6 @@ import { RegisterUseCase } from './application/use-cases/register.usecase.servic
 import { LoginUseCase } from './application/use-cases/login.usecase.service';
 import { AuthController } from './presentation/controllers/auth.controller';
 import { BLACKLISTED_TOKEN_REPOSITORY, PASSWORD_HASHER, TOKEN_SERVICE, USER_REPOSITORY } from './domain/auth.tokens';
-import { UserDocument, UserSchema } from './infrastructure/persistence/schemas/user.schema';
 import {
   BlacklistedTokenDocument,
   BlacklistedTokenSchema
