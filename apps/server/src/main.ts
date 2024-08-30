@@ -21,11 +21,7 @@ async function bootstrap() {
   }));
   const globalPrefix = 'api/v1';
   app.setGlobalPrefix(globalPrefix);
-  app.enableCors({
-    origin: ['*'],
-    methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
-    credentials: true,
-  });
+  app.enableCors();
 
   const port = process.env.PORT || 3000;
   await app.listen(port);
