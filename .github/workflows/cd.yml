@@ -71,6 +71,7 @@ jobs:
             JWT_SECRET=${{ secrets.JWT_KEY_SECRET }}
             MONGODB_URI=${{ secrets.MONGODB_URI_SECRET }}
             TOKEN_EXPIRATION=${{ secrets.JWT_EXPIRATION }}
+          timeout: 600s
 
       # Deploy client to Cloud Run with the server's URL as an environment variable
       - name: Deploy Client to Cloud Run
@@ -82,6 +83,7 @@ jobs:
           image: ${{env.LOCATION}}-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/${{ secrets.REPO_NAME }}/client:${{ github.sha }}-${{ github.ref_name }}
           env_vars: |
             SERVER_URL=${{ steps.deploy-server.outputs.url }}
+          timeout: 600s
 
       # If required, use the Cloud Run URL outputs in later steps
       - name: Show Client URL
