@@ -67,7 +67,13 @@ jobs:
           service: ${{ secrets.SERVER_SERVICE }}
           region: ${{env.LOCATION}}
           image: ${{env.LOCATION}}-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/${{ secrets.REPO_NAME }}/server:${{ github.sha }}-${{ github.ref_name }}
-          env_vars: |
+          port: '3000'               
+          memory: '512Mi'            
+          cpu: '1'                   
+          max-instances: '10'        
+          min-instances: '1'         
+          concurrency: '80'          
+          env_vars: |                
             JWT_SECRET=${{ secrets.JWT_KEY_SECRET }}
             MONGODB_URI=${{ secrets.MONGODB_URI_SECRET }}
             TOKEN_EXPIRATION=${{ secrets.JWT_EXPIRATION }}
@@ -81,10 +87,15 @@ jobs:
           service: ${{ secrets.CLIENT_SERVICE }}
           region: ${{env.LOCATION}}
           image: ${{env.LOCATION}}-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/${{ secrets.REPO_NAME }}/client:${{ github.sha }}-${{ github.ref_name }}
-          env_vars: |
-            SERVER_URL=${{ steps.deploy-server.outputs.url }}
-          timeout: 600s
-
+          port: '80'               
+          memory: '512Mi'            
+          cpu: '1'                   
+          max-instances: '10'        
+          min-instances: '1'         
+          concurrency: '80'          
+          env_vars: |                
+           SERVER_URL=${{ steps.deploy-server.outputs.url }}
+           
       # If required, use the Cloud Run URL outputs in later steps
       - name: Show Client URL
         run: echo ${{ steps.deploy-client.outputs.url }}
