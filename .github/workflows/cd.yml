@@ -57,7 +57,7 @@ jobs:
             -f apps/server/Dockerfile \
             -t ${{env.LOCATION}}-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/${{ secrets.REPO_NAME }}/server:${{ github.sha }}-${{ github.ref_name }} \
             .
-          image: ${{env.LOCATION}}-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/${{ secrets.REPO_NAME }}/server:${{ github.sha }}-${{ github.ref_name }}
+          docker push ${{env.LOCATION}}-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/${{ secrets.REPO_NAME }}/server:${{ github.sha }}-${{ github.ref_name }}
 
       # Deploy server to Cloud Run with environment variables
       - name: Deploy Server to Cloud Run
