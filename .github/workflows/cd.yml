@@ -59,7 +59,7 @@ jobs:
             .
           docker push ${{env.LOCATION}}-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/${{ secrets.REPO_NAME }}/server:${{ github.sha }}-${{ github.ref_name }}
 
-      # Deploy server to Cloud Run with environment variables
+
       - name: Deploy Server to Cloud Run
         id: deploy-server
         uses: google-github-actions/deploy-cloudrun@v2
@@ -67,19 +67,19 @@ jobs:
           service: ${{ secrets.SERVER_SERVICE }}
           region: ${{env.LOCATION}}
           image: ${{env.LOCATION}}-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/${{ secrets.REPO_NAME }}/server:${{ github.sha }}-${{ github.ref_name }}
-          port: '3000'               
-          memory: '512Mi'            
-          cpu: '1'                   
-          max-instances: '10'        
-          min-instances: '1'         
-          concurrency: '80'          
-          env_vars: |                
+          env_vars: |
             JWT_SECRET=${{ secrets.JWT_KEY_SECRET }}
             MONGODB_URI=${{ secrets.MONGODB_URI_SECRET }}
             TOKEN_EXPIRATION=${{ secrets.JWT_EXPIRATION }}
+          flags: |
+            --port 3000
+            --memory 512Mi
+            --cpu 1
+            --max-instances 10
+            --min-instances 1
+            --concurrency 80
           timeout: 600s
 
-      # Deploy client to Cloud Run with the server's URL as an environment variable
       - name: Deploy Client to Cloud Run
         id: deploy-client
         uses: google-github-actions/deploy-cloudrun@v2
@@ -87,14 +87,16 @@ jobs:
           service: ${{ secrets.CLIENT_SERVICE }}
           region: ${{env.LOCATION}}
           image: ${{env.LOCATION}}-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/${{ secrets.REPO_NAME }}/client:${{ github.sha }}-${{ github.ref_name }}
-          port: '80'               
-          memory: '512Mi'            
-          cpu: '1'                   
-          max-instances: '10'        
-          min-instances: '1'         
-          concurrency: '80'          
-          env_vars: |                
-           SERVER_URL=${{ steps.deploy-server.outputs.url }}
+          env_vars: |
+            SERVER_URL=${{ steps.deploy-server.outputs.url }}
+          flags: |
+            --port 80
+            --memory 256Mi
+            --cpu 1
+            --max-instances 5
+            --min-instances 1
+            --concurrency 100
+          timeout: 600s
            
       # If required, use the Cloud Run URL outputs in later steps
       - name: Show Client URL
