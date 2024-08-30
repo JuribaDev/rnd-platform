@@ -46,8 +46,8 @@ jobs:
             -t ${{env.LOCATION}}-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/${{ secrets.REPO_NAME }}/client:${{ github.sha }} \
             -t ${{env.LOCATION}}-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/${{ secrets.REPO_NAME }}/client:${{ github.ref_name }} \
             .
-          docker push ${{env.LOCATION}}-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/${{ secrets.REPO_NAME }}/client:${{ github.sha }}
-          docker push ${{env.LOCATION}}-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/${{ secrets.REPO_NAME }}/client:${{ github.ref_name }}
+          docker push ${{env.LOCATION}}-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/${{ secrets.REPO_NAME }}/client:${{ github.sha }}-${{ github.ref_name }}
+
 
       - name: Build and push Docker image for server
         run: |
@@ -59,8 +59,7 @@ jobs:
             -t ${{env.LOCATION}}-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/${{ secrets.REPO_NAME }}/server:${{ github.sha }} \
             -t ${{env.LOCATION}}-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/${{ secrets.REPO_NAME }}/server:${{ github.ref_name }} \
             .
-          docker push ${{env.LOCATION}}-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/${{ secrets.REPO_NAME }}/server:${{ github.sha }}
-          docker push ${{env.LOCATION}}-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/${{ secrets.REPO_NAME }}/server:${{ github.ref_name }}
+          image: ${{env.LOCATION}}-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/${{ secrets.REPO_NAME }}/server:${{ github.sha }}-${{ github.ref_name }}
 
       # Deploy server to Cloud Run with environment variables
       - name: Deploy Server to Cloud Run
@@ -69,7 +68,7 @@ jobs:
         with:
           service: ${{ secrets.SERVER_SERVICE }}
           region: ${{env.LOCATION}}
-          image: ${{env.LOCATION}}-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/${{ secrets.REPO_NAME }}/${{ secrets.SERVER_SERVICE }}:${{ github.sha }}
+          image: ${{env.LOCATION}}-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/${{ secrets.REPO_NAME }}/server:${{ github.sha }}-${{ github.ref_name }}
           env_vars: |
             JWT_SECRET=${{ secrets.JWT_KEY_SECRET }}
             MONGODB_URI=${{ secrets.MONGODB_URI_SECRET }}
@@ -82,7 +81,7 @@ jobs:
         with:
           service: ${{ secrets.CLIENT_SERVICE }}
           region: ${{env.LOCATION}}
-          image: ${{env.LOCATION}}-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/${{ secrets.REPO_NAME }}/${{ secrets.CLIENT_SERVICE }}:${{ github.sha }}
+          image: ${{env.LOCATION}}-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/${{ secrets.REPO_NAME }}/client:${{ github.sha }}-${{ github.ref_name }}
           env_vars: |
             SERVER_URL=${{ steps.deploy-server.outputs.url }}
 
