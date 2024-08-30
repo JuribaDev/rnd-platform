@@ -97,6 +97,8 @@ jobs:
             --max-instances 3
             --min-instances 1
             --concurrency 100
+            --allow-unauthenticated
+
           timeout: 600s
            
       # If required, use the Cloud Run URL outputs in later steps
