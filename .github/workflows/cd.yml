@@ -78,7 +78,7 @@ jobs:
             --max-instances 3
             --min-instances 1
             --concurrency 80
-            --ingress internal
+            --allow-unauthenticated
           timeout: 600s
 
       - name: Deploy Client to Cloud Run
@@ -97,6 +97,6 @@ jobs:
             --max-instances 3
             --min-instances 1
             --concurrency 100
-            --ingress internal
-          timeout: 600s
+            --allow-unauthenticated
 
+          timeout: 600s

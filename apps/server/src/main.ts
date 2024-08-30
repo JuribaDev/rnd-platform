@@ -5,7 +5,7 @@ import { AppModule } from './app.module';
 import mongoose from 'mongoose';
 
 async function bootstrap() {
-  const app = await NestFactory.create(AppModule);
+  const app = await NestFactory.create(AppModule,{cors:true});
   app.useGlobalPipes(new ValidationPipe({
     whitelist: true,
     forbidNonWhitelisted: true,
@@ -21,11 +21,6 @@ async function bootstrap() {
   }));
   const globalPrefix = 'api/v1';
   app.setGlobalPrefix(globalPrefix);
-  app.enableCors({
-    origin: ['https://34.1.32.26', 'https://rndplatform.juriba.info'],
-    methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
-    credentials: true,
-  });
 
   const port = process.env.PORT || 3000;
   await app.listen(port);
