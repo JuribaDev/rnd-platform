@@ -15,6 +15,7 @@ jobs:
 
     env:
       LOCATION: me-central1
+      CLIENT_ENV_PATH: apps/client/src/environments/environment.prod.ts
 
 
     steps:
@@ -35,17 +36,6 @@ jobs:
         run: |
           gcloud auth configure-docker ${{env.LOCATION}}-docker.pkg.dev
 
-      - name: Build and push Docker image for client
-        run: |
-          docker build \
-            --build-arg BUILD_DATE=$(date -u +'%Y-%m-%dT%H:%M:%SZ') \
-            --build-arg GITHUB_SHA=${{ github.sha }} \
-            --build-arg GITHUB_REF_NAME=${{ github.ref_name }} \
-            -f apps/client/Dockerfile \
-            -t ${{env.LOCATION}}-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/${{ secrets.REPO_NAME }}/client:${{ github.sha }}-${{ github.ref_name }} \
-            .
-          docker push ${{env.LOCATION}}-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/${{ secrets.REPO_NAME }}/client:${{ github.sha }}-${{ github.ref_name }}
-
 
       - name: Build and push Docker image for server
         run: |
@@ -57,7 +47,6 @@ jobs:
             -t ${{env.LOCATION}}-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/${{ secrets.REPO_NAME }}/server:${{ github.sha }}-${{ github.ref_name }} \
             .
           docker push ${{env.LOCATION}}-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/${{ secrets.REPO_NAME }}/server:${{ github.sha }}-${{ github.ref_name }}
-
 
       - name: Deploy Server to Cloud Run
         id: deploy-server
@@ -78,9 +67,29 @@ jobs:
             --min-instances 1
             --concurrency 80
             --allow-unauthenticated
-            --ingress=all
+            --ingress=internal
 
           timeout: 600s
+
+      - name: Set the api url in the client
+        run: |
+          # Set correct permissions for environment.prod variables
+          sudo chmod 777 ${{env.CLIENT_ENV_PATH}}
+
+          # Update Kubernetes manifests with secrets and environment variables
+          sed -i "s|API_URL_PLACEHOLDER|${{ steps.deploy-server.outputs.url }}|g" ${{env.CLIENT_ENV_PATH}}
+
+      - name: Build and push Docker image for client
+        run: |
+          docker build \
+            --build-arg BUILD_DATE=$(date -u +'%Y-%m-%dT%H:%M:%SZ') \
+            --build-arg GITHUB_SHA=${{ github.sha }} \
+            --build-arg GITHUB_REF_NAME=${{ github.ref_name }} \
+            -f apps/client/Dockerfile \
+            -t ${{env.LOCATION}}-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/${{ secrets.REPO_NAME }}/client:${{ github.sha }}-${{ github.ref_name }} \
+            .
+          docker push ${{env.LOCATION}}-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/${{ secrets.REPO_NAME }}/client:${{ github.sha }}-${{ github.ref_name }}
+
 
       - name: Deploy Client to Cloud Run
         id: deploy-client
@@ -89,8 +98,6 @@ jobs:
           service: ${{ secrets.CLIENT_SERVICE }}
           region: ${{env.LOCATION}}
           image: ${{env.LOCATION}}-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/${{ secrets.REPO_NAME }}/client:${{ github.sha }}-${{ github.ref_name }}
-          env_vars: |
-            API_URL=${{ steps.deploy-server.outputs.url }}
           flags: |
             --port 80
             --memory 256Mi
@@ -98,7 +105,6 @@ jobs:
             --max-instances 3
             --min-instances 1
             --concurrency 100
-            --allow-unauthenticated
-            --ingress=all
+            --ingress=internal-and-cloud-load-balancing
 
           timeout: 600s
