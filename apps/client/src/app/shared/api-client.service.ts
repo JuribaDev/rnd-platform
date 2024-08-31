@@ -22,6 +22,8 @@ export class ApiClientService {
 
   // Auth endpoints
   login(loginData: LoginRequestDto): Observable<AuthResponseDto> {
+    console.log(`Making login request to: ${this.baseUrl}/auth/login`);
+
     return this.http.post<AuthResponseDto>(`${this.baseUrl}/auth/login`, loginData);
   }
 

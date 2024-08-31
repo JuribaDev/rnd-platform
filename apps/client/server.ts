@@ -33,6 +33,8 @@ export function app(): express.Express {
   // All regular routes use the Angular engine
   server.get('*', (req, res, next) => {
     const { protocol, originalUrl, baseUrl, headers } = req;
+    console.log(`SSR request: ${protocol}://${headers.host}${originalUrl}`);
+
 
     commonEngine
       .render({
