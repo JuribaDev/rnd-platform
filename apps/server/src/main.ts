@@ -3,9 +3,10 @@ import { NestFactory } from '@nestjs/core';
 
 import { AppModule } from './app.module';
 import mongoose from 'mongoose';
+import { ORIGINS } from './shared/origins';
 
 async function bootstrap() {
-  const app = await NestFactory.create(AppModule);
+  const app = await NestFactory.create(AppModule, {logger: ['error', 'warn', 'log','fatal']});
   app.useGlobalPipes(new ValidationPipe({
     whitelist: true,
     forbidNonWhitelisted: true,
@@ -19,6 +20,13 @@ async function bootstrap() {
       return new BadRequestException(result);
     },
   }));
+  app.enableCors({
+    origin: ORIGINS,
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization'],
+    credentials: true,
+  });
+
   const globalPrefix = 'api/v1';
   app.setGlobalPrefix(globalPrefix);
 

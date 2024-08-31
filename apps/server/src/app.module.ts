@@ -4,10 +4,13 @@ import { MongooseModule } from '@nestjs/mongoose';
 import { AuthModule } from './auth/auth.module';
 import { ProductModule } from './product/product.module';
 import { EventEmitterModule } from '@nestjs/event-emitter';
+import { ThrottlerGuard, ThrottlerModule } from '@nestjs/throttler';
+import { APP_GUARD } from '@nestjs/core';
 
 @Module({
   imports: [
     EventEmitterModule.forRoot(),
+    ThrottlerModule.forRoot([{ ttl: 60000, limit: 100 }]),
     ConfigModule.forRoot({
       isGlobal: true,
       envFilePath: '.env',
@@ -36,5 +39,11 @@ import { EventEmitterModule } from '@nestjs/event-emitter';
     AuthModule,
     ProductModule,
   ],
+  providers: [
+    {
+      provide: APP_GUARD,
+      useClass: ThrottlerGuard,
+    },
+  ]
 })
 export class AppModule {}
