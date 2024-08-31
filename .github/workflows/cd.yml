@@ -4,7 +4,6 @@ on:
   push:
     branches:
       - main
-      - dev
 
 jobs:
   build-and-push:
@@ -78,9 +77,8 @@ jobs:
             --max-instances 3
             --min-instances 1
             --concurrency 80
-            --allow-unauthenticated
-            --ingress=all
-            
+            --ingress=internal
+
           timeout: 600s
 
       - name: Deploy Client to Cloud Run
@@ -100,6 +98,6 @@ jobs:
             --min-instances 1
             --concurrency 100
             --allow-unauthenticated
-            --ingress=all
+            --ingress=internal-and-cloud-load-balancing
 
           timeout: 600s
