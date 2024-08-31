@@ -12,9 +12,7 @@ import { environment } from '../../environments/environment';
 export class ApiClientService {
   private baseUrl = environment.apiUrl;
 
-  constructor(private http: HttpClient, private tokenService: TokenService) {
-  
-  }
+  constructor(private http: HttpClient, private tokenService: TokenService) {}
 
   private getHeaders(): HttpHeaders {
     const token = this.tokenService.getToken();
