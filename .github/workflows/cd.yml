@@ -79,7 +79,7 @@ jobs:
             --min-instances 1
             --concurrency 80
             --allow-unauthenticated
-            --ingress
+            --ingress=all
             
           timeout: 600s
 
@@ -100,6 +100,6 @@ jobs:
             --min-instances 1
             --concurrency 100
             --allow-unauthenticated
-            --ingress
+            --ingress=all
 
           timeout: 600s

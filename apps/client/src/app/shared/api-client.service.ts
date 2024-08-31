@@ -16,7 +16,8 @@ export class ApiClientService {
 
   private getHeaders(): HttpHeaders {
     const token = this.tokenService.getToken();
-    return new HttpHeaders().set('Authorization', `Bearer ${token}`);
+
+    return new HttpHeaders().set('Authorization', `Bearer ${token}`).set('Content-Type', 'application/json');
   }
 
   // Auth endpoints
