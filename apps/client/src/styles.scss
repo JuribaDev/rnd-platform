@@ -1,1 +1,110 @@
-/* You can add global styles to this file, and also import other style files */
+/* Define color variables for GitHub dark mode */
+:root {
+  --background-color: #0d1117;
+  --text-color: #c9d1d9;
+  --header-color: #161b22;
+  --border-color: #30363d;
+  --link-color: #58a6ff;
+  --primary-color: #238636;
+  --secondary-color: #1f6feb;
+  --error-color: #f85149;
+}
+
+/* Apply global styles */
+body {
+  background-color: var(--background-color);
+  color: var(--text-color);
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  margin: 0;
+  padding: 0;
+}
+
+a {
+  color: var(--link-color);
+  text-decoration: none;
+}
+
+a:hover {
+  text-decoration: underline;
+}
+
+button {
+  background-color: var(--primary-color);
+  color: #ffffff;
+  border: 1px solid var(--border-color);
+  padding: 8px 16px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: bold;
+  transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+button:hover {
+  background-color: var(--primary-color-dark); /* Use the pre-defined darkened color */
+  border-color: var(--link-color);
+}
+
+button:focus {
+  outline: none;
+  box-shadow: 0 0 0 2px var(--link-color);
+}
+
+input, textarea, select {
+  background-color: #21262d;
+  color: var(--text-color);
+  border: 1px solid var(--border-color);
+  padding: 10px;
+  border-radius: 4px;
+}
+
+input:focus, textarea:focus, select:focus {
+  border-color: var(--link-color);
+  outline: none;
+}
+
+.error-message {
+  color: var(--error-color);
+  background-color: #291b1b;
+  padding: 10px;
+  border-radius: 4px;
+}
+
+.container {
+  padding: 10px;
+}
+
+@media (min-width: 768px) {
+  .container {
+    padding: 20px;
+    max-width: 1200px;
+    margin: 0 auto;
+  }
+}
+
+.header {
+  display: flex;
+  justify-content: flex-end; /* Align the button to the right */
+  padding: 10px;
+  background-color: #161b22; /* Background color */
+  border-bottom: 1px solid #30363d; /* Border to separate the header from the rest of the content */
+}
+
+
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px 20px;
+  background-color: #161b22;
+  border-bottom: 1px solid #30363d;
+}
+
+
+
+.greeting {
+  font-size: 18px;
+  color: #c9d1d9;
+}
+
+
