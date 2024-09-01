@@ -39,3 +39,7 @@ jobs:
           name: test-coverage
           path: 'coverage/apps/**'
 
+      - name: test building docker images
+        run: |
+            docker build -t test-server-image -f apps/server/Dockerfile .
+            docker build -t test-client-image -f apps/client/Dockerfile .
