@@ -23,7 +23,7 @@ LABEL org.opencontainers.image.created=${BUILD_DATE}
 LABEL org.opencontainers.image.version=${GITHUB_REF_NAME}
 LABEL maintainer="Juriba Saleh juribaSaleh@gmail.com"
 
-COPY --from=build /app/dist/apps/client/browser /usr/share/nginx/html
+COPY --from=build /app/dist/apps/client /usr/share/nginx/html
 
 COPY apps/client/nginx.conf /etc/nginx/nginx.conf
 
