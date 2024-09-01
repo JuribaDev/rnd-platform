@@ -37,7 +37,7 @@ describe('JwtTokenProvider', () => {
       const result = provider.generate(user);
 
       expect(result).toBe(token);
-      expect(jwtService.sign).toHaveBeenCalledWith({ email: user.email, sub: user.id });
+      expect(jwtService.sign).toHaveBeenCalledWith({ email: user.email, sub: user.id }, { expiresIn: '8h' });
     });
   });
 
