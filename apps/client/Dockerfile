@@ -31,7 +31,6 @@ RUN apk add --no-cache gettext
 
 COPY apps/client/env.sh /docker-entrypoint.d/40-env.sh
 
-RUN chmod +x /docker-entrypoint.d/40-env.sh
 
 RUN chown -R nginx:nginx /usr/share/nginx/html && \
     chmod -R 755 /usr/share/nginx/html && \

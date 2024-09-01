@@ -67,7 +67,7 @@ jobs:
             --min-instances 1
             --concurrency 80
             --allow-unauthenticated
-            --ingress=internal
+            --ingress=all
 
           timeout: 600s
 
@@ -105,6 +105,7 @@ jobs:
             --max-instances 3
             --min-instances 1
             --concurrency 100
-            --ingress=internal-and-cloud-load-balancing
+            --allow-unauthenticated
+            --ingress=all
 
           timeout: 600s
