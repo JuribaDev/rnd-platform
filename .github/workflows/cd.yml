@@ -1,111 +1,111 @@
-name: Build and Deploy Docker Images
+# name: Build and Deploy Docker Images
 
-on:
-  push:
-    branches:
-      - main
+# on:
+#   push:
+#     branches:
+#       - main
 
-jobs:
-  build-and-push:
-    runs-on: ubuntu-latest
+# jobs:
+#   build-and-push:
+#     runs-on: ubuntu-latest
 
-    permissions:
-      contents: 'read'
-      id-token: 'write'
+#     permissions:
+#       contents: 'read'
+#       id-token: 'write'
 
-    env:
-      LOCATION: me-central1
-      CLIENT_ENV_PATH: apps/client/src/environments/environment.prod.ts
-
-
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Authenticate to Google Cloud
-        uses: google-github-actions/auth@v2
-        with:
-          credentials_json: '${{ secrets.GCP_CREDENTIALS }}'
-
-      - name: Set up Google Cloud SDK
-        uses: google-github-actions/setup-gcloud@v2
-        with:
-          project_id: ${{ secrets.GCP_PROJECT_ID }}
-
-      - name: Configure Docker for Artifact Registry
-        run: |
-          gcloud auth configure-docker ${{env.LOCATION}}-docker.pkg.dev
+#     env:
+#       LOCATION: me-central1
+#       CLIENT_ENV_PATH: apps/client/src/environments/environment.prod.ts
 
 
-      - name: Build and push Docker image for server
-        run: |
-          docker build \
-            --build-arg BUILD_DATE=$(date -u +'%Y-%m-%dT%H:%M:%SZ') \
-            --build-arg GITHUB_SHA=${{ github.sha }} \
-            --build-arg GITHUB_REF_NAME=${{ github.ref_name }} \
-            -f apps/server/Dockerfile \
-            -t ${{env.LOCATION}}-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/${{ secrets.REPO_NAME }}/server:${{ github.sha }}-${{ github.ref_name }} \
-            .
-          docker push ${{env.LOCATION}}-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/${{ secrets.REPO_NAME }}/server:${{ github.sha }}-${{ github.ref_name }}
+#     steps:
+#       - name: Checkout code
+#         uses: actions/checkout@v4
 
-      - name: Deploy Server to Cloud Run
-        id: deploy-server
-        uses: google-github-actions/deploy-cloudrun@v2
-        with:
-          service: ${{ secrets.SERVER_SERVICE }}
-          region: ${{env.LOCATION}}
-          image: ${{env.LOCATION}}-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/${{ secrets.REPO_NAME }}/server:${{ github.sha }}-${{ github.ref_name }}
-          env_vars: |
-            JWT_SECRET=${{ secrets.JWT_KEY_SECRET }}
-            PROD_MONGODB_URI=${{ secrets.MONGODB_URI_SECRET }}
-            TOKEN_EXPIRATION=${{ secrets.JWT_EXPIRATION }}
-          flags: |
-            --port 3000
-            --memory 512Mi
-            --cpu 1
-            --max-instances 3
-            --min-instances 1
-            --concurrency 80
-            --allow-unauthenticated
-            --ingress=all
+#       - name: Authenticate to Google Cloud
+#         uses: google-github-actions/auth@v2
+#         with:
+#           credentials_json: '${{ secrets.GCP_CREDENTIALS }}'
 
-          timeout: 600s
+#       - name: Set up Google Cloud SDK
+#         uses: google-github-actions/setup-gcloud@v2
+#         with:
+#           project_id: ${{ secrets.GCP_PROJECT_ID }}
 
-      - name: Set the api url in the client
-        run: |
-          # Set correct permissions for environment.prod variables
-          sudo chmod 777 ${{env.CLIENT_ENV_PATH}}
-
-          # Update Kubernetes manifests with secrets and environment variables
-          sed -i "s|API_URL_PLACEHOLDER|${{ steps.deploy-server.outputs.url }}|g" ${{env.CLIENT_ENV_PATH}}
-
-      - name: Build and push Docker image for client
-        run: |
-          docker build \
-            --build-arg BUILD_DATE=$(date -u +'%Y-%m-%dT%H:%M:%SZ') \
-            --build-arg GITHUB_SHA=${{ github.sha }} \
-            --build-arg GITHUB_REF_NAME=${{ github.ref_name }} \
-            -f apps/client/Dockerfile \
-            -t ${{env.LOCATION}}-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/${{ secrets.REPO_NAME }}/client:${{ github.sha }}-${{ github.ref_name }} \
-            .
-          docker push ${{env.LOCATION}}-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/${{ secrets.REPO_NAME }}/client:${{ github.sha }}-${{ github.ref_name }}
+#       - name: Configure Docker for Artifact Registry
+#         run: |
+#           gcloud auth configure-docker ${{env.LOCATION}}-docker.pkg.dev
 
 
-      - name: Deploy Client to Cloud Run
-        id: deploy-client
-        uses: google-github-actions/deploy-cloudrun@v2
-        with:
-          service: ${{ secrets.CLIENT_SERVICE }}
-          region: ${{env.LOCATION}}
-          image: ${{env.LOCATION}}-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/${{ secrets.REPO_NAME }}/client:${{ github.sha }}-${{ github.ref_name }}
-          flags: |
-            --port 80
-            --memory 256Mi
-            --cpu 1
-            --max-instances 3
-            --min-instances 1
-            --concurrency 100
-            --allow-unauthenticated
-            --ingress=all
+#       - name: Build and push Docker image for server
+#         run: |
+#           docker build \
+#             --build-arg BUILD_DATE=$(date -u +'%Y-%m-%dT%H:%M:%SZ') \
+#             --build-arg GITHUB_SHA=${{ github.sha }} \
+#             --build-arg GITHUB_REF_NAME=${{ github.ref_name }} \
+#             -f apps/server/Dockerfile \
+#             -t ${{env.LOCATION}}-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/${{ secrets.REPO_NAME }}/server:${{ github.sha }}-${{ github.ref_name }} \
+#             .
+#           docker push ${{env.LOCATION}}-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/${{ secrets.REPO_NAME }}/server:${{ github.sha }}-${{ github.ref_name }}
 
-          timeout: 600s
+#       - name: Deploy Server to Cloud Run
+#         id: deploy-server
+#         uses: google-github-actions/deploy-cloudrun@v2
+#         with:
+#           service: ${{ secrets.SERVER_SERVICE }}
+#           region: ${{env.LOCATION}}
+#           image: ${{env.LOCATION}}-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/${{ secrets.REPO_NAME }}/server:${{ github.sha }}-${{ github.ref_name }}
+#           env_vars: |
+#             JWT_SECRET=${{ secrets.JWT_KEY_SECRET }}
+#             PROD_MONGODB_URI=${{ secrets.MONGODB_URI_SECRET }}
+#             TOKEN_EXPIRATION=${{ secrets.JWT_EXPIRATION }}
+#           flags: |
+#             --port 3000
+#             --memory 512Mi
+#             --cpu 1
+#             --max-instances 3
+#             --min-instances 1
+#             --concurrency 80
+#             --allow-unauthenticated
+#             --ingress=all
+
+#           timeout: 600s
+
+#       - name: Set the api url in the client
+#         run: |
+#           # Set correct permissions for environment.prod variables
+#           sudo chmod 777 ${{env.CLIENT_ENV_PATH}}
+
+#           # Update Kubernetes manifests with secrets and environment variables
+#           sed -i "s|API_URL_PLACEHOLDER|${{ steps.deploy-server.outputs.url }}|g" ${{env.CLIENT_ENV_PATH}}
+
+#       - name: Build and push Docker image for client
+#         run: |
+#           docker build \
+#             --build-arg BUILD_DATE=$(date -u +'%Y-%m-%dT%H:%M:%SZ') \
+#             --build-arg GITHUB_SHA=${{ github.sha }} \
+#             --build-arg GITHUB_REF_NAME=${{ github.ref_name }} \
+#             -f apps/client/Dockerfile \
+#             -t ${{env.LOCATION}}-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/${{ secrets.REPO_NAME }}/client:${{ github.sha }}-${{ github.ref_name }} \
+#             .
+#           docker push ${{env.LOCATION}}-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/${{ secrets.REPO_NAME }}/client:${{ github.sha }}-${{ github.ref_name }}
+
+
+#       - name: Deploy Client to Cloud Run
+#         id: deploy-client
+#         uses: google-github-actions/deploy-cloudrun@v2
+#         with:
+#           service: ${{ secrets.CLIENT_SERVICE }}
+#           region: ${{env.LOCATION}}
+#           image: ${{env.LOCATION}}-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/${{ secrets.REPO_NAME }}/client:${{ github.sha }}-${{ github.ref_name }}
+#           flags: |
+#             --port 80
+#             --memory 256Mi
+#             --cpu 1
+#             --max-instances 3
+#             --min-instances 1
+#             --concurrency 100
+#             --allow-unauthenticated
+#             --ingress=all
+
+#           timeout: 600s
